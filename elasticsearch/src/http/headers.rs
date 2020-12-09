@@ -17,7 +17,7 @@
  * under the License.
  */
 //! HTTP header names and values, including those specific to Elasticsearch
-
+#[cfg(feature = "tokio")]
 pub use reqwest::header::*;
 
 /// The default user-agent header value sent by the client

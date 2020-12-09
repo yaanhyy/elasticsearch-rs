@@ -15,11 +15,13 @@ readme = "../README.md"
 all-features = true
 
 [features]
-default = ["native-tls"]
+default = []
+#default = ["native-tls"]
 
 # optional TLS
-native-tls = ["reqwest/native-tls"]
-rustls-tls = ["reqwest/rustls-tls"]
+#native-tls = ["reqwest/native-tls"]
+#rustls-tls = ["reqwest/rustls-tls"]
+tokio = []
 
 [dependencies]
 base64 = "^0.11"
@@ -43,7 +45,7 @@ hyper = { version = "0.13", default-features = false, features = ["tcp", "stream
 os_type = "2.2"
 sysinfo = "0.12.0"
 textwrap = "^0.11"
-tokio = { version = "0.2.0", default-features = false, features = ["macros", "tcp", "time"] }
+#tokio = { version = "0.2.0", default-features = false, features = ["macros", "tcp", "time"] }
 xml-rs = "^0.8"
 
 [build-dependencies]

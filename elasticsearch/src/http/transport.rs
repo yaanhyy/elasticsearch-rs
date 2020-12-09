@@ -48,13 +48,18 @@ use url::Url;
 
 /// Error that can occur when building a [Transport]
 #[derive(Debug)]
+#[cfg(feature = "tokio")]
 pub enum BuildError {
     /// IO error
     Io(io::Error),
 
+
     /// Certificate error
     Cert(reqwest::Error),
+
 }
+
+
 
 impl From<io::Error> for BuildError {
     fn from(err: io::Error) -> BuildError {
@@ -305,6 +310,7 @@ impl Connection {
 /// A HTTP transport responsible for making the API requests to Elasticsearch,
 /// using a [Connection] selected from a [ConnectionPool]
 #[derive(Debug, Clone)]
+#[cfg(feature = "tokio")]
 pub struct Transport {
     client: reqwest::Client,
     credentials: Option<Credentials>,
