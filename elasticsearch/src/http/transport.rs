@@ -103,6 +103,7 @@ impl fmt::Display for BuildError {
 pub static DEFAULT_ADDRESS: &str = "http://localhost:9200";
 
 /// Builds a HTTP transport to make API calls to Elasticsearch
+#[cfg(feature = "tokio-feature")]
 pub struct TransportBuilder {
     client_builder: reqwest::ClientBuilder,
     conn_pool: Box<dyn ConnectionPool>,
@@ -116,6 +117,7 @@ pub struct TransportBuilder {
     timeout: Option<Duration>,
 }
 
+#[cfg(feature = "tokio-feature")]
 impl TransportBuilder {
     /// Creates a new instance of [TransportBuilder]. Accepts a [ConnectionPool]
     /// from which [Connection]s to Elasticsearch will be retrieved.
@@ -286,6 +288,128 @@ impl Default for TransportBuilder {
     }
 }
 
+#[cfg(feature = "async-std-feature")]
+pub struct TransportBuilder {
+    client_builder: surf::RequestBuilder,
+    conn_pool: Box<dyn ConnectionPool>,
+    credentials: Option<Credentials>,
+    #[cfg(any(feature = "native-tls", feature = "rustls-tls"))]
+    cert_validation: Option<CertificateValidation>,
+    proxy: Option<Url>,
+    proxy_credentials: Option<Credentials>,
+    disable_proxy: bool,
+    headers: HeaderMap,
+    timeout: Option<Duration>,
+}
+
+#[cfg(feature = "async-std-feature")]
+impl TransportBuilder {
+    /// Creates a new instance of [TransportBuilder]. Accepts a [ConnectionPool]
+    /// from which [Connection]s to Elasticsearch will be retrieved.
+    pub fn new<P>(conn_pool: P, url: Url) -> Self
+        where
+            P: ConnectionPool + Debug + Clone + Send + 'static,
+    {
+        Self {
+            client_builder: surf::RequestBuilder::new(surf::http::Method::Post, url),
+            conn_pool: Box::new(conn_pool),
+            credentials: None,
+            #[cfg(any(feature = "native-tls", feature = "rustls-tls"))]
+            cert_validation: None,
+            proxy: None,
+            proxy_credentials: None,
+            disable_proxy: false,
+            headers: HeaderMap::new(),
+            timeout: None,
+        }
+    }
+
+    /// Configures a proxy.
+    ///
+    /// An optional username and password will be used to set the
+    /// `Proxy-Authorization` header using Basic Authentication.
+    pub fn proxy(mut self, url: Url, username: Option<&str>, password: Option<&str>) -> Self {
+        self.proxy = Some(url);
+        if let Some(u) = username {
+            let p = password.unwrap_or("");
+            self.proxy_credentials = Some(Credentials::Basic(u.into(), p.into()));
+        }
+
+        self
+    }
+
+    /// Whether to disable proxies, including system proxies.
+    ///
+    /// NOTE: System proxies are enabled by default.
+    pub fn disable_proxy(mut self) -> Self {
+        self.disable_proxy = true;
+        self
+    }
+
+    /// Credentials for the client to use for authentication to Elasticsearch
+    pub fn auth(mut self, credentials: Credentials) -> Self {
+        self.credentials = Some(credentials);
+        self
+    }
+
+    /// Validation applied to the certificate provided to establish a HTTPS connection.
+    /// By default, full validation is applied. When using a self-signed certificate,
+    /// different validation can be applied.
+    #[cfg(any(feature = "native-tls", feature = "rustls-tls"))]
+    pub fn cert_validation(mut self, validation: CertificateValidation) -> Self {
+        self.cert_validation = Some(validation);
+        self
+    }
+
+    /// Adds a HTTP header that will be added to all client API calls.
+    ///
+    /// A default HTTP header can be overridden on a per API call basis.
+    pub fn header(mut self, key: HeaderName, value: HeaderValue) -> Self {
+        self.headers.insert(key, value);
+        self
+    }
+
+    /// Adds HTTP headers that will be added to all client API calls.
+    ///
+    /// Default HTTP headers can be overridden on a per API call basis.
+    pub fn headers(mut self, headers: HeaderMap) -> Self {
+        for (key, value) in headers.iter() {
+            self.header(key, value.clone());
+        }
+        self
+    }
+
+    /// Sets a global request timeout for the client.
+    ///
+    /// The timeout is applied from when the request starts connecting until the response body has finished.
+    /// Default is no timeout.
+    pub fn timeout(mut self, timeout: Duration) -> Self {
+        self.timeout = Some(timeout);
+        self
+    }
+
+    /// Builds a [Transport] to use to send API calls to Elasticsearch.
+    pub fn build(self) -> Result<Transport, BuildError> {
+        let mut client_builder = self.client_builder;
+
+
+
+        if let Some(t) = self.timeout {
+            //client_builder = client_builder.timeout(t);
+        }
+
+
+
+
+        let client = surf::post(self);
+        Ok(Transport {
+            client,
+            conn_pool: self.conn_pool,
+            credentials: self.credentials,
+        })
+    }
+}
+
 /// A connection to an Elasticsearch node, used to send an API request
 #[derive(Debug, Clone)]
 pub struct Connection {
@@ -316,7 +440,7 @@ pub struct Transport {
     credentials: Option<Credentials>,
     conn_pool: Box<dyn ConnectionPool>,
 }
-
+#[cfg(feature = "tokio-feature")]
 impl Transport {
     fn method(&self, method: Method) -> reqwest::Method {
         match method {
@@ -441,6 +565,16 @@ impl Default for Transport {
         TransportBuilder::default().build().unwrap()
     }
 }
+
+
+#[derive(Debug, Clone)]
+#[cfg(feature = "async-std-feature")]
+pub struct Transport {
+    client: surf::Client,
+    credentials: Option<Credentials>,
+    conn_pool: Box<dyn ConnectionPool>,
+}
+
 
 /// A pool of [Connection]s, used to make API calls to Elasticsearch.
 ///

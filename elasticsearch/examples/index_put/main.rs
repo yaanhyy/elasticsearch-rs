@@ -15,9 +15,9 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Elasticsearch::new(transport);
 
     let response = client
-        .index(IndexParts::IndexId("test_db", "1"))
+        .index(IndexParts::IndexId("test_db", "3"))
         .body(json!({
-        "block_hash": "0x23",
+        "block_hash": "0x56",
 
     }))
         .send()

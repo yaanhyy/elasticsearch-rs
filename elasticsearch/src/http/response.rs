@@ -17,6 +17,7 @@
  * under the License.
  */
 //! HTTP response components
+#[cfg(feature = "tokio-feature")]
 use crate::{
     error::Error as ClientError,
     http::{headers::HeaderMap, Method, StatusCode, Url},
