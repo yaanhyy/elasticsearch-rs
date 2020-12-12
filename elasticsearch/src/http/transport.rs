@@ -48,7 +48,7 @@ use url::Url;
 
 /// Error that can occur when building a [Transport]
 #[derive(Debug)]
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-feature")]
 pub enum BuildError {
     /// IO error
     Io(io::Error),
@@ -310,7 +310,7 @@ impl Connection {
 /// A HTTP transport responsible for making the API requests to Elasticsearch,
 /// using a [Connection] selected from a [ConnectionPool]
 #[derive(Debug, Clone)]
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-feature")]
 pub struct Transport {
     client: reqwest::Client,
     credentials: Option<Credentials>,

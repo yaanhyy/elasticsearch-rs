@@ -31,7 +31,7 @@ use std::{collections::BTreeMap, fmt, str::FromStr};
 use void::Void;
 
 /// A response from Elasticsearch
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-feature")]
 pub struct Response(reqwest::Response, Method);
 
 impl Response {

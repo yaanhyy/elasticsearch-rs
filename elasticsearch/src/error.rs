@@ -44,7 +44,7 @@ pub struct Error {
     kind: Kind,
 }
 
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-feature")]
 #[derive(Debug)]
 enum Kind {
     /// An error building the client
@@ -71,7 +71,7 @@ impl From<io::Error> for Error {
     }
 }
 
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-feature")]
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {
         Error {
